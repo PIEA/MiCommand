@@ -96,18 +96,5 @@ namespace MiCommand
                 player.SendMessage($"{ChatColors.LightPurple}더 많은 명령어를 보고 싶으시면 {ChatColors.Green}[!help (페이지 숫자)]");
             }
         }
-
-        [Command]
-        public void Test(Player player)
-        {
-            player.SendMessage("GGGGGGGGGG");
-        }
-
-        [Command]
-        public void Test(Player player, string num)
-        {
-            player.SendMessage("HHHHHHHHHHH");
-        }
-
     }
 }
