@@ -78,6 +78,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy D:\Workspace\MiCommand\MiCommand\bin\Debug\MiCommand.dll D:\Workspace\MiNET-Luncher</PostBuildEvent>
+    <PostBuildEvent>copy D:\Workspace\MiCommand\MiCommand\bin\Debug\MiCommand.dll D:\Workspace\MiNET-Luncher
+del D:\Workspace\MiNET-Luncher\minetlog.log</PostBuildEvent>
   </PropertyGroup>
 </Project>
