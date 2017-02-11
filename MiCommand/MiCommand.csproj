@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandHandler.cs" />
+    <Compile Include="Commands.cs" />
     <Compile Include="MiCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
