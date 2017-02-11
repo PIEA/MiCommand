@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using log4net;
 using System.Reflection;
+using System.Threading;
 
 namespace MiCommand
 {
@@ -24,14 +25,13 @@ namespace MiCommand
             var helpList = new List<string>();
             foreach (var command in commands)
             {
-                string helpMsg = $"!{command.Value.Name}";
+                string helpMsg = $"▷ !{command.Value.Name}";
                 if (!string.IsNullOrWhiteSpace(command.Value.Versions.First().Overloads["default"].Description))
                 {
                     helpMsg += $" -> {command.Value.Versions.First().Overloads["default"].Description}";
                 }
                 helpList.Add(helpMsg);
             }
-
             var result = new List<List<string>>();
             var list = new List<string>();
             for (int i = 0; i < helpList.Count; i++)
@@ -49,7 +49,6 @@ namespace MiCommand
                     break;
                 }
             }
-
             return result;
         }
 
@@ -63,8 +62,37 @@ namespace MiCommand
             }
             else
             {
-                GetHelpList().First().ForEach(x => player.SendMessage(ChatColors.Green + x));
+                foreach (var help in helpList[0])
+                {
+                    player.SendMessage(help);
+                }
                 player.SendMessage($"{ChatColors.LightPurple}1/{helpList.Count} 페이지입니다.");
+                player.SendMessage($"{ChatColors.LightPurple}더 많은 명령어를 보고 싶으시면 {ChatColors.Green}[!help (페이지 숫자)]");
+            }
+        }
+
+        [Command]
+        public void Help(Player player, int pageNumber)
+        {
+            var helpList = GetHelpList();
+            if (helpList.Count == 0)
+            {
+                player.SendMessage($"{ChatColors.Yellow}서버에서 검색되는 명령어가 없습니다.");
+                return;
+            }
+
+            if (pageNumber > helpList.Count || pageNumber < 1)
+            {
+                player.SendMessage($"{ChatColors.Yellow}맞는 페이지 번호가 없습니다.");
+                player.SendMessage($"명령어 목록 페이지 수는 {ChatColors.Green}{helpList.Count}{ChatColors.Yellow}페이지까지 존재합니다.");
+            }
+            else
+            {
+                foreach (var help in helpList[pageNumber - 1])
+                {
+                    player.SendMessage(help);
+                }
+                player.SendMessage($"{ChatColors.LightPurple}{pageNumber}/{helpList.Count} 페이지입니다.");
                 player.SendMessage($"{ChatColors.LightPurple}더 많은 명령어를 보고 싶으시면 {ChatColors.Green}[!help (페이지 숫자)]");
             }
         }
@@ -76,32 +104,10 @@ namespace MiCommand
         }
 
         [Command]
-        public void Test(Player player, int num)
+        public void Test(Player player, string num)
         {
-            player.SendMessage(num.ToString());
+            player.SendMessage("HHHHHHHHHHH");
         }
 
-        //[Command]
-        //public void Help(Player player, int pageNumber)
-        //{
-        //    var helpList = GetHelpList();
-        //    if (helpList.Count == 0)
-        //    {
-        //        player.SendMessage($"{ChatColors.Yellow}서버에서 검색되는 명령어가 없습니다.");
-        //        return;
-        //    }
-
-        //    if (pageNumber > helpList.Count || pageNumber < 1)
-        //    {
-        //        player.SendMessage($"{ChatColors.Yellow}맞는 페이지 번호가 없습니다.");
-        //        player.SendMessage($"명령어 목록 페이지 수는 {ChatColors.Green}{helpList.Count}{ChatColors.Yellow}페이지까지 존재합니다.");
-        //    }
-        //    else
-        //    {
-        //        helpList[pageNumber - 1].ForEach(x => player.SendMessage(ChatColors.Green + x));
-        //        player.SendMessage($"{ChatColors.LightPurple}{pageNumber}/{helpList.Count} 페이지입니다.");
-        //        player.SendMessage($"{ChatColors.LightPurple}더 많은 명령어를 보고 싶으시면 {ChatColors.Green}[!help (페이지 숫자)]");
-        //    }
-        //}
     }
 }

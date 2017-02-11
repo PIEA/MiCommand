@@ -19,111 +19,100 @@ namespace MiCommand
     public class CommandHandler : MiCommand
     {
         [PacketHandler]
-        public Package HandleChatCommand(McpeText packet, Player player)
+        public Package HandleCommand(McpeText packet, Player player)
         {
             var msg = packet.message;
             if (msg.First() != '!')
             {
                 return packet;
             }
-            Log.Debug($"명령어 로드 시작. 받은 명령어: {msg}");
-            var commandList = this.Context.PluginManager.Commands;
-            var commandMsg = msg.Remove(0, 1);
-            var command = commandMsg.Split(' ');
-            var commandArgs = new List<string>();
-            if (command.Count() > 1)
+
+            var commands = this.Context.PluginManager.Commands.ToList();
+            msg = msg.Remove(0, 1);
+            if (string.IsNullOrWhiteSpace(msg))
             {
-                commandArgs = command.ToList().GetRange(1, command.Count() - 1);
+                return packet;
             }
-            Log.Debug($"명령어: {command[0]}, 인자갯수: {commandArgs.Count}");
-            Log.Debug("명령어 검색 시작");
-            var commandResults = (from commandInfo in commandList
-                                  where commandInfo.Key == command[0]
-                                  select commandInfo).ToList();
-            if (commandResults.Count() == 0)
+            var msgs = msg.Split(' ').ToList();
+            var targetCommand = msgs[0];
+            var targetCommandArgs = new List<string>();
+            if (msgs.Count > 1)
             {
-                Log.Debug("명령어 검색 실패. 존재안함.");
-                player.SendMessage($"{ChatColors.Yellow}명령어가 존재하지 않아요!");
-                return null;
+                msgs.Remove(msgs[0]);
+                targetCommandArgs = msgs;
             }
-            Log.Debug($"명령어 검색 성공");
-            dynamic commandInputJson = null;
-            if (commandArgs.Count > 0)
+
+            string overloadKey = null;
+            JObject commandInputJson = null;
+
+            if (commands.Exists(x => x.Key == targetCommand))
             {
-                var targetArgsType = new List<string>();
-                commandArgs.ForEach(x => targetArgsType.Add(GetArgType(x)));
-                foreach (var item in targetArgsType)
+                var command = commands.Find(x => x.Key == targetCommand);
+                var commandArgNames = new List<string>();
+
+                if (targetCommandArgs.Count > 0)
                 {
-                    Log.Debug($"명령어 인자 타입:{item}");
-                }
-                string overloadKey = null;
-                List<string> parameterNames = new List<string>();
-                foreach (var targetCommand in commandResults)
-                {
-                    foreach (var overload in targetCommand.Value.Versions.First().Overloads)
+                    var targetCommandArgTypes = new List<string>();
+                    foreach (var arg in targetCommandArgs)
                     {
-                        var methodParmsType = new List<string>();
+                        targetCommandArgTypes.Add(GetArgType(arg));
+                    }
+                    targetCommandArgTypes.Sort();
+
+                    foreach (var overload in command.Value.Versions.First().Overloads)
+                    {
+                        var commandArgTypes = new List<string>();
                         foreach (var parameter in overload.Value.Method.GetParameters())
                         {
                             if (parameter.ParameterType == typeof(Player))
                             {
                                 continue;
                             }
-                            methodParmsType.Add(GetParameterType(parameter));
+                            commandArgTypes.Add(GetParameterType(parameter));
+                            commandArgNames.Add(parameter.Name);
                         }
 
-                        targetArgsType.Sort();
-                        methodParmsType.Sort();
-                        if (targetArgsType.SequenceEqual(methodParmsType))
+                        commandArgTypes.Sort();
+                        if (targetCommandArgTypes.SequenceEqual(commandArgTypes))
                         {
                             overloadKey = overload.Key;
-                            foreach (var parameter in overload.Value.Method.GetParameters())
-                            {
-                                parameterNames.Add(parameter.Name);
-                            }
-                            break;
+                            commandInputJson = JObject.Parse(ConvertJson(commandArgNames, targetCommandArgs));
                         }
+                        commandArgNames.Clear();
                     }
-                    if (overloadKey != null)
+                    if (overloadKey == null)
                     {
-                        break;
+                        player.SendMessage($"{ChatColors.Yellow}명령어가 존재하지 않아요!");
+                        return null;
                     }
                 }
-
-                if (overloadKey == null)
+                else
                 {
-                    Log.Debug("명령어 검색 실패. 명령어와 맞는 인자가 있는 함수가 존재하지 않음.");
-                    player.SendMessage($"{ChatColors.Yellow}명령어가 존재하지 않아요!");
-                    return null;
-                }
-
-                Log.Debug("인자를 json으로 변경중...");
-                string json = ConvertJson(parameterNames, commandArgs);
-                Log.Debug($"변환 결과: {json}");
-                if (json != null)
-                {
-                    commandInputJson = JsonConvert.DeserializeObject<dynamic>(json);
+                    overloadKey = "default";
                 }
             }
+            else
+            {
+                player.SendMessage($"{ChatColors.Yellow}명령어가 존재하지 않아요!");
+                return null;
+            }
 
-            this.Context.Server.PluginManager.HandleCommand(player, command[0], "default", commandInputJson ?? null);
-            Log.Debug("명령어 실행함");
-
+            this.Context.PluginManager.HandleCommand(player, targetCommand, overloadKey, commandInputJson);
             return null;
         }
 
-        private string ConvertJson(List<string> key, List<string> value)
+        private string ConvertJson(List<string> commandParamName, List<string> targetCommandArgs)
         {
             string json = "{ ";
-            if (key.Count == 0)
+            if (commandParamName.Count == 0)
             {
                 return null;
             }
-            for (int i = 0; i < value.Count; i++)
+            for (int i = 0; i < targetCommandArgs.Count; i++)
             {
-                if (key.Count - 1 >= i)
+                if (commandParamName.Count - 1 >= i)
                 {
-                    json += $@"""{ key[i].ToString() }"": ""{ value[i].ToString() }"", ";
+                    json += $@"""{ commandParamName[i].ToString() }"": ""{ targetCommandArgs[i].ToString() }"", ";
                 }
             }
             json = json.Remove(json.Count() - 2);
