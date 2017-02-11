@@ -20,6 +20,7 @@ namespace MiCommand
     public class MiCommand : Plugin
     {
         private static ILog Log = LogManager.GetLogger(typeof(MiCommand));
+        private const string prefix = "[MiCommand] ";
 
         protected override void OnEnable()
         {
@@ -34,9 +35,8 @@ namespace MiCommand
             {
                 return packet;
             }
-            Log.Debug("명령어 로드 시작");
+            Log.Debug($"명령어 로드 시작. 받은 명령어: {msg}");
             var commandList = this.Context.PluginManager.Commands;
-
             var commandMsg = msg.Remove(0, 1);
             var command = commandMsg.Split(' ');
             var commandArgs = new List<string>();
@@ -46,7 +46,6 @@ namespace MiCommand
             }
             Log.Debug($"명령어: {command[0]}, 인자갯수: {commandArgs.Count}");
             Log.Debug("명령어 검색 시작");
-
             var commandResults = (from commandInfo in commandList
                                   where commandInfo.Key == command[0]
                                   select commandInfo).ToList();
@@ -56,8 +55,7 @@ namespace MiCommand
                 player.SendMessage($"{ChatColors.Yellow}명령어가 존재하지 않아요!");
                 return null;
             }
-            Log.Debug($"명령어 {commandResults.Count()}개 검색 성공");
-
+            Log.Debug($"명령어 검색 성공");
             dynamic commandInputJson = null;
             if (commandArgs.Count > 0)
             {
@@ -85,7 +83,6 @@ namespace MiCommand
 
                         targetArgsType.Sort();
                         methodParmsType.Sort();
-                        // 비교가 안됨.
                         if (targetArgsType.SequenceEqual(methodParmsType))
                         {
                             overloadKey = overload.Key;
@@ -161,6 +158,8 @@ namespace MiCommand
             }
             return value;
         }
+
+        // Code from https://github.com/NiclasOlofsson/MiNET/blob/master/src/MiNET/MiNET/Plugins/PluginManager.cs#L345
         private static string GetParameterType(ParameterInfo parameter)
         {
             string value = parameter.ParameterType.ToString();
