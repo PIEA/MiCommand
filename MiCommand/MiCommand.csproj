@@ -69,7 +69,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandHandler.cs" />
-    <Compile Include="Commands.cs" />
     <Compile Include="MiCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -78,7 +77,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy D:\Workspace\MiCommand\MiCommand\bin\Debug\MiCommand.dll D:\Workspace\MiNET-Luncher
-del D:\Workspace\MiNET-Luncher\minetlog.log</PostBuildEvent>
+    <PostBuildEvent>copy D:\Workspace\MiCommand\MiCommand\bin\Debug\MiCommand.dll D:\Workspace\MiNET-Luncher</PostBuildEvent>
   </PropertyGroup>
 </Project>
