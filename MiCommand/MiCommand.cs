@@ -17,7 +17,7 @@ using System.Reflection;
 namespace MiCommand
 {
     [Plugin(Author = "Sepi", Description = "명령어를 관리합니다. Manages commands.", 
-        PluginName = "MiCommand", PluginVersion = "v1.0 - Beta")]
+        PluginName = "MiCommand", PluginVersion = "v1.1")]
     public class MiCommand : Plugin
     {
         protected static ILog Log = LogManager.GetLogger(typeof(MiCommand));
